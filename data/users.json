@@ -1,0 +1,27 @@
+[
+  {
+    "email": "test@test.com",
+    "password": "1111111111111",
+    "preguntaRecuperacion": "perro"
+  },
+  {
+    "email": "nuevo@test.com",
+    "password": "12345678",
+    "preguntaRecuperacion": "gato"
+  },
+  {
+    "email": "nuevo@test2.com",
+    "password": "12345678111",
+    "preguntaRecuperacion": "gato"
+  },
+  {
+    "email": "a@a.com",
+    "password": "12345678",
+    "preguntaRecuperacion": "zorra"
+  },
+  {
+    "email": "pepito@j.com",
+    "password": "999999999999999999999999",
+    "preguntaRecuperacion": "tortuga"
+  }
+]

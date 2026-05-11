@@ -1,56 +1,44 @@
-document
-  .getElementById("formLogin")
-  .addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const data = {
-      correo: document.getElementById("correo").value,
-      password: document.getElementById("password").value,
-    };
-
-    try {
-      const res = await fetch("http://localhost:3000/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await res.json();
-
-      document.getElementById("resultado").textContent = result.msg;
-    } catch {
-      document.getElementById("resultado").textContent =
-        "Error al conectar";
-    }
-  });
+console.log("login JS cargado");
 
 import { mostrarModal } from "./modal.js";
 
-document
-  .getElementById("formLogin")
-  .addEventListener("submit", async (e) => {
-    e.preventDefault();
+const formLogin = document.getElementById("formLogin");
 
-    const data = {
-      correo: document.getElementById("correo").value,
-      password: document.getElementById("password").value,
-    };
+formLogin.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    try {
-      const res = await fetch("http://localhost:3000/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+  const data = {
+    correo: document.getElementById("correo").value.trim(),
+    contrasena: document.getElementById("password").value,
+  };
 
-      const result = await res.json();
+  try {
+    const res = await fetch("http://localhost:5000/api/sqlserver/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
 
-      mostrarModal(result.msg);
-    } catch {
-      mostrarModal("Error al conectar con el servidor");
+    const result = await res.json();
+
+    if (res.ok) {
+      mostrarModal(result.msg || "Inicio de sesión exitoso");
+
+      setTimeout(() => {
+        window.location.href = "/bienvenida";
+      }, 1000);
+
+    } else {
+      mostrarModal(result.msg || result.error || "Correo o contraseña incorrectos");
     }
-  });
+
+    document.getElementById("resultado").textContent =
+      result.msg || result.error || "";
+
+  } catch (error) {
+    console.error("ERROR LOGIN:", error);
+    mostrarModal("Error al conectar con el servidor");
+  }
+});

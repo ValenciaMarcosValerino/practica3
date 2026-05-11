@@ -22,37 +22,61 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
+import session from 'express-session';
 import { fileURLToPath } from 'url';
 
 import formRoutes from './routes/formRoutes.js';
 import apiRoutes from './routes/apiRoutes.js';
 
-// Cargar variables del archivo .env
 dotenv.config({ path: './.env' });
 
-// Verificar si leyó el puerto
 console.log('PORT leído:', process.env.PORT);
 
 const app = express();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Motor EJS
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Para usar __dirname con ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Sesiones
+app.use(session({
+  secret: 'mi_clave_secreta',
+  resave: false,
+  saveUninitialized: false
+}));
 
 // Archivos estáticos
 app.use('/', express.static(path.join(__dirname, 'public')));
 
-// Rutas originales de formularios
+// Rutas API
 app.use('/api', formRoutes);
-
-// Rutas nuevas de SQL Server
 app.use('/api', apiRoutes);
 
-// Puerto desde .env o 5000 por defecto
+// Vista bienvenida protegida
+app.get('/bienvenida', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/html/login.html');
+  }
+
+  res.render('bienvenida', {
+    usuario: req.session.user
+  });
+});
+
+// Cerrar sesión
+app.get('/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.redirect('/html/login.html');
+  });
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

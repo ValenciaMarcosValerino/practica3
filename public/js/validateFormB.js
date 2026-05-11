@@ -1,124 +1,111 @@
 console.log("registro JS cargado");
-const form = document.getElementById("formRecuperacion");
-const resultado = document.getElementById("resultado");
-const campos = [
-    "nombre",
-    "password",
-    "confirmarPassword",
-    "preguntaRecuperacion",
-    "correo"
-];
 
 import { mostrarModal } from "./modal.js";
 
+const form = document.getElementById("formRecuperacion");
+
+const campos = ["nombre", "correo", "password", "preguntaRecuperacion"];
+
 function validarCampo(id) {
-    const input = document.getElementById(id);
-    const error = document.getElementById("error-" + id);
+  const input = document.getElementById(id);
+  const error = document.getElementById("error-" + id);
 
-    if (!input || !error) return true;
+  if (!input) return true;
 
-    error.textContent = "";
-    input.classList.remove("valido", "invalido");
+  if (error) error.textContent = "";
 
-    if (input.required && input.validity.valueMissing) {
-        error.textContent = "Este campo es obligatorio";
-        input.classList.add("invalido");
-        return false;
-    }
+  input.classList.remove("valido", "invalido");
 
-    if (id === "password") {
-        if (input.value.length < 8) {
-            error.textContent = "La contraseña debe tener al menos 8 caracteres";
-            input.classList.add("invalido");
-            return false;
-        }
-    }
+  if (input.required && input.value.trim() === "") {
+    if (error) error.textContent = "Este campo es obligatorio";
+    input.classList.add("invalido");
+    return false;
+  }
 
-    if (id === "confirmarPassword") {
-        const password = document.getElementById("password").value;
+  if (id === "password" && input.value.length < 8) {
+    if (error) error.textContent = "La contraseña debe tener al menos 8 caracteres";
+    input.classList.add("invalido");
+    return false;
+  }
 
-        if (input.value.length < 8) {
-            error.textContent = "La confirmación debe tener al menos 8 caracteres";
-            input.classList.add("invalido");
-            return false;
-        }
+  if (input.validity.patternMismatch) {
+    if (error) error.textContent = "Formato inválido";
+    input.classList.add("invalido");
+    return false;
+  }
 
-        if (input.value !== password) {
-            error.textContent = "Las contraseñas no coinciden";
-            input.classList.add("invalido");
-            return false;
-        }
-    }
+  if (input.validity.typeMismatch) {
+    if (error) error.textContent = "Correo electrónico inválido";
+    input.classList.add("invalido");
+    return false;
+  }
 
-    if (id === "preguntaRecuperacion") {
-        if (input.value.trim().length < 5) {
-            error.textContent = "La pregunta de recuperación es muy corta";
-            input.classList.add("invalido");
-            return false;
-        }
-    }
-
-    if (input.validity.patternMismatch) {
-        const mensajes = {
-            nombre: "El nombre solo debe contener letras y espacios"
-        };
-
-        error.textContent = mensajes[id] || "Formato inválido";
-        input.classList.add("invalido");
-        return false;
-    }
-
-    if (input.validity.typeMismatch) {
-        error.textContent = "Correo electrónico inválido";
-        input.classList.add("invalido");
-        return false;
-    }
-
-    input.classList.add("valido");
-    return true;
+  input.classList.add("valido");
+  return true;
 }
 
-campos.forEach(id => {
-    const input = document.getElementById(id);
+campos.forEach((id) => {
+  const input = document.getElementById(id);
 
-    if (!input) return;
+  if (!input) return;
 
-    input.addEventListener("blur", () => validarCampo(id));
-    input.addEventListener("input", () => validarCampo(id));
+  input.addEventListener("blur", () => validarCampo(id));
+  input.addEventListener("input", () => validarCampo(id));
 });
-form.addEventListener("submit", async function (e) {
-    e.preventDefault();
 
-    let valido = true;
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    campos.forEach(id => {
-        if (!validarCampo(id)) {
-            valido = false;
-        }
+  let valido = true;
+
+  campos.forEach((id) => {
+    if (!validarCampo(id)) {
+      valido = false;
+    }
+  });
+
+  const respuesta = document.getElementById("respuestaRecuperacion");
+
+  if (!respuesta || respuesta.value.trim() === "") {
+    mostrarModal("La respuesta de recuperación es obligatoria");
+    return;
+  }
+
+  if (!valido) return;
+
+  const data = {
+    nombre: document.getElementById("nombre").value.trim(),
+    correo: document.getElementById("correo").value.trim(),
+    contrasena: document.getElementById("password").value,
+    preguntarc: document.getElementById("preguntaRecuperacion").value,
+    respuestarc: respuesta.value.trim(),
+  };
+
+  console.log("ENVIANDO A SQL SERVER:");
+  console.log(data);
+
+  try {
+    const res = await fetch("http://localhost:5000/api/sqlserver/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
     });
 
-    if (!valido) return;
+    const result = await res.json();
 
-    const data = {
-    correo: document.getElementById("correo").value,
-    password: document.getElementById("password").value,
-    pregunta: document.getElementById("preguntaRecuperacion").value,
-    respuesta: document.getElementById("respuestaRecuperacion").value,
-    };
+    console.log("STATUS:", res.status);
+    console.log("RESPUESTA:", result);
 
-    try {
-        const res = await fetch("http://localhost:3000/api/registro", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-        });
-
-        const result = await res.json();
-
-        mostrarModal(result.msg);
-    } catch (error) {
-        mostrarModal(result.msg);
+    if (res.ok) {
+      mostrarModal("Usuario registrado correctamente en SQL Server");
+      form.reset();
+    } else {
+      mostrarModal(result.error || "No se pudo registrar el usuario");
     }
+  } catch (error) {
+    console.error("ERROR FETCH:", error);
+    mostrarModal("Error al conectar con el servidor");
+  }
 });

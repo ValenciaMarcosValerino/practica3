@@ -58,16 +58,32 @@ export const login = async (req, res) => {
   const { correo, password } = req.body;
 
   if (!correo || !password) {
-    return res.json({ msg: "Faltan datos" });
+    return res.json({ 
+      success: false,
+      msg: "Faltan datos" 
+    });
   }
 
   const user = await loginUser(correo, password);
 
   if (!user) {
-    return res.json({ msg: "Correo o contraseña incorrectos" });
+    return res.json({ 
+      success: false,
+      msg: "Correo o contraseña incorrectos" 
+    });
   }
 
-  res.json({ msg: "Inicio de sesión exitoso" });
+  req.session.user = {
+    id: user.id,
+    correo: user.correo || user.email,
+    nombre: user.nombre || user.email || user.correo
+  };
+
+  res.json({ 
+    success: true,
+    msg: "Inicio de sesión exitoso",
+    redirect: "/bienvenida"
+  });
 };
 
 import { findUserByEmail } from "../models/usuarios.js";

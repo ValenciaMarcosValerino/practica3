@@ -20,10 +20,12 @@ router.post("/recuperar", recuperarPassword);
 
 export default router; peticiones.
 */import express from "express";
+
 import { 
   recuperarPassword, 
   registrarUsuario, 
-  login 
+  login,
+  obtenerPregunta
 } from "../controllers/formControllers.js";
 
 const router = express.Router();
@@ -31,9 +33,6 @@ const router = express.Router();
 router.post("/registro", registrarUsuario);
 router.post("/login", login);
 router.post("/recuperar", recuperarPassword);
+router.post("/pregunta", obtenerPregunta);
 
 export default router;
-
-import { obtenerPregunta } from "../controllers/formControllers.js";
-
-router.post("/pregunta", obtenerPregunta);
